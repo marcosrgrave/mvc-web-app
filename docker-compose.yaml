@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+  mysql:
+    image: mysql:5.7
+    container_name: mysql-mvc-app
+    platform: linux/amd64
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: tests
+    ports:
+      - 3306:3306
+  #   healthcheck:
+  #     test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 3
+  # go:
+  #   build: .
+  #   container_name: go-mvc-app
+  #   volumes:
+  #     - .:/go/src/
+  #   ports:
+  #     - 8080:8080
+  #   command: dockerize -wait tcp://db:3306 -timeout 1m go run main.go
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
