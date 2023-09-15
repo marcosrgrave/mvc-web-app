@@ -7,15 +7,15 @@ import (
 )
 
 func LoadRoutes() {
-	LoadPages()
-	LoadCRUD()
+	LoadClient()
+	LoadService()
 }
 
-func LoadCRUD() {
+func LoadService() {
 	http.HandleFunc("/products", controllers.Products)
 }
 
-func LoadPages() {
+func LoadClient() {
 	LoadProductPages()
 }
 
