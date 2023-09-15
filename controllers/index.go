@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 
@@ -76,6 +76,9 @@ func NewProductPage(w http.ResponseWriter, r *http.Request) {
 			utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error creating new product.")
 		}
 
+		http.Redirect(w, r, "/products/list", http.StatusMovedPermanently)
+		utils.JSONResponseMessage(w, http.StatusOK, "Product created successfully.")
+
 	}
 
 	err = temp.ExecuteTemplate(w, "NewProductPage", nil)
@@ -86,23 +89,60 @@ func NewProductPage(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateProductPage(w http.ResponseWriter, r *http.Request) {
+	productID := r.URL.Query().Get("id")
 
-	err := temp.ExecuteTemplate(w, "UpdateProductPage", nil)
+	db, err := db.DBConn()
 	if err != nil {
-		fmt.Println(err)
-		utils.JSONResponseError(w, http.StatusInternalServerError, "Error executing Update Product Page template.", err)
+		log.Fatalln(err)
+		utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error establishing database connection.")
+		return
+	}
+	defer db.Close()
+
+	product, err := models.ReadProduct(db, productID)
+	if err != nil {
+		log.Fatalln(err)
+		utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error reading product: "+err.Error())
 		return
 	}
 
-	// if r.Method == http.MethodPut {
-	// }
+	if r.Method == http.MethodPost {
+		name := r.FormValue("name")
+		description := r.FormValue("description")
+		price := r.FormValue("price")
+		quantity := r.FormValue("quantity")
 
-	// err = models.UpdateProduct(db, product)
-	// if err != nil {
-	// 	utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error updating product.")
-	// 	return
-	// }
+		priceFloat, err := strconv.ParseFloat(price, 64)
+		if err != nil {
+			log.Fatalln(err)
+			utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error converting price to float.")
+		}
 
-	// utils.JSONResponseMessage(w, http.StatusInternalServerError, "Product updated successfully.")
+		quantityInt, err := strconv.Atoi(quantity)
+		if err != nil {
+			log.Fatalln(err)
+			utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error converting quantity to integer.")
+		}
 
+		product.Name = name
+		product.Description = description
+		product.Price = priceFloat
+		product.Quantity = quantityInt
+
+		err = models.UpdateProduct(db, product)
+		if err != nil {
+			log.Fatalln(err)
+			utils.JSONResponseMessage(w, http.StatusInternalServerError, "Error creating new product.")
+		}
+
+		http.Redirect(w, r, "/products/list", http.StatusMovedPermanently)
+		utils.JSONResponseMessage(w, http.StatusOK, "Product updated successfully.")
+	}
+
+	err = temp.ExecuteTemplate(w, "UpdateProductPage", product)
+	if err != nil {
+		log.Fatalln(err)
+		utils.JSONResponseError(w, http.StatusInternalServerError, "Error executing Update Product Page template.", err)
+		return
+	}
 }
