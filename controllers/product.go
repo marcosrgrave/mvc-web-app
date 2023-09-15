@@ -3,6 +3,7 @@ package controllers
 import (
 	"database/sql"
 	"encoding/json"
+	"log"
 	"net/http"
 
 	"github.com/marcosrgrave/mvc-crud-products/models"
@@ -72,17 +73,27 @@ func (pc *ProductsController) Create() {
 func (pc *ProductsController) Update() {
 	var product *models.Product
 
-	err := json.NewDecoder(pc.r.Body).Decode(&product)
-	if err != nil {
+	if err := json.NewDecoder(pc.r.Body).Decode(&product); err != nil {
 		utils.JSONResponseMessage(pc.w, http.StatusInternalServerError, "JSON decoder failed.")
 		return
 	}
 
-	models.UpdateProduct(pc.db, product)
+	err := models.UpdateProduct(pc.db, product)
+	if err != nil {
+		utils.JSONResponseMessage(pc.w, http.StatusInternalServerError, "Update product failed.")
+		log.Fatalln(err)
+	}
 
 	utils.JSONResponseMessage(pc.w, http.StatusOK, "Product updated successfully.")
 }
 
 func (pc *ProductsController) Delete() {
-	utils.JSONResponseMessage(pc.w, http.StatusNotFound, "Delete method not implemented yet.")
+	productID := pc.r.URL.Query().Get("id")
+	if err := models.DeleteProduct(pc.db, productID); err != nil {
+		utils.JSONResponseMessage(pc.w, http.StatusInternalServerError, "Invalid product ID.")
+		log.Fatalln(err)
+		return
+	}
+	http.Redirect(pc.w, pc.r, "/products/list", http.StatusMovedPermanently)
+	utils.JSONResponseMessage(pc.w, http.StatusOK, "Product deleted successfully.")
 }
