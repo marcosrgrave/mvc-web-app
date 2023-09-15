@@ -97,7 +97,15 @@ func ReadAllProducts(db *sql.DB) ([]*Product, error) {
 
 	for rows.Next() {
 		var product Product
-		err := rows.Scan(&product.ID, &product.Name, &product.Description, &product.Price, &product.Quantity, &product.CreatedAt, &product.CreatorID)
+		err := rows.Scan(
+			&product.ID,
+			&product.Name,
+			&product.Description,
+			&product.Price,
+			&product.Quantity,
+			&product.CreatedAt,
+			&product.CreatorID,
+		)
 		if err != nil {
 			return nil, err
 		}
@@ -150,7 +158,7 @@ func UpdateProduct(db *sql.DB, product *Product) error {
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(product.ID, product.Name, product.Description, product.Price, product.Quantity, product.CreatedAt, product.CreatorID)
+	_, err = stmt.Exec(product.Name, product.Description, product.Price, product.Quantity, product.CreatedAt, product.CreatorID, product.ID)
 	if err != nil {
 		return err
 	}
